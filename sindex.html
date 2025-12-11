@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kanban Task Manager</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+    }
+
+    header {
+        background: #3f51b5;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .container {
+        display: flex;
+        justify-content: space-around;
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .column {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        width: 30%;
+        min-height: 400px;
+        box-shadow: 0 0 10px #ddd;
+    }
+
+    .column h2 {
+        text-align: center;
+    }
+
+    .task {
+        background: #fff;
+        padding: 10px;
+        margin: 10px 0;
+        border-left: 6px solid #3f51b5;
+        border-radius: 5px;
+        cursor: grab;
+        box-shadow: 0 0 5px #ccc;
+    }
+
+    .task.overdue {
+        border-left-color: red;
+        background: #ffe5e5;
+    }
+
+    .task small {
+        display: block;
+        color: #555;
+        margin-top: 5px;
+    }
+
+    #newTaskForm {
+        background: white;
+        padding: 15px;
+        margin: 20px auto;
+        width: 50%;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #ccc;
+    }
+
+    label {
+        display: block;
+        margin-top: 10px;
+    }
+
+    input, select, button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #aaa;
+    }
+
+    button {
+        background: #3f51b5;
+        color: white;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+
+    .drop-hover {
+        background: #dfe6ff !important;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Kanban Task Management Tool</h1>
+</header>
+
+<!-- Task Creation Form -->
+<div id="newTaskForm">
+    <h3>Create Task</h3>
+    <label>Task Title:</label>
+    <input type="text" id="title">
+
+    <label>Assign To:</label>
+    <select id="assignedTo">
+        <option>Alice</option>
+        <option>Bob</option>
+        <option>Charlie</option>
+    </select>
+
+    <label>Deadline:</label>
+    <input type="date" id="deadline">
+
+    <button onclick="addTask()">Add Task</button>
+</div>
+
+<!-- Kanban Board -->
+<div class="container">
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="todo">
+        <h2>To Do</h2>
+    </div>
+
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="inprogress">
+        <h2>In Progress</h2>
+    </div>
+
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="done">
+        <h2>Done</h2>
+    </div>
+</div>
+
+<script>
+// Unique ID generator
+function uid() {
+    return 'task-' + Math.random().toString(16).slice(2);
+}
+
+// Add new task
+function addTask() {
+    const title = document.getElementById("title").value;
+    const assignedTo = document.getElementById("assignedTo").value;
+    const deadline = document.getElementById("deadline").value;
+
+    if (!title.trim()) return alert("Task needs a title!");
+
+    const id = uid();
+    const task = document.createElement("div");
+    task.id = id;
+    task.className = "task";
+    task.draggable = true;
+    task.ondragstart = drag;
+
+    task.innerHTML = `
+        <strong>${title}</strong>
+        <small>Assigned to: ${assignedTo}</small>
+        <small>Deadline: ${deadline || "None"}</small>
+    `;
+
+    checkDeadline(task, deadline);
+
+    document.getElementById("todo").appendChild(task);
+
+    document.getElementById("title").value = "";
+    document.getElementById("deadline").value = "";
+}
+
+// Drag & Drop
+function drag(event) {
+    event.dataTransfer.setData("text", event.target.id);
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add("drop-hover");
+}
+
+function drop(event) {
+    event.preventDefault();
+    const id = event.dataTransfer.getData("text");
+    event.currentTarget.appendChild(document.getElementById(id));
+    event.currentTarget.classList.remove("drop-hover");
+}
+
+// Deadline Checker
+function checkDeadline(task, dateStr) {
+    if (!dateStr) return;
+
+    const deadline = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (deadline < today) {
+        task.classList.add("overdue");
+    }
+}
+</script>
+
+</body>
+</html>
